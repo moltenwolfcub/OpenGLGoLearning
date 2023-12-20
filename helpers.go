@@ -1,7 +1,10 @@
 package main
 
 import (
+	"fmt"
+	"os"
 	"strings"
+	"time"
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
@@ -15,6 +18,16 @@ type ShaderID uint32
 type ProgramID uint32
 type VBOID uint32
 type VAOID uint32
+
+func LoadShader(path string, shaderType uint32) ShaderID {
+	shaderFile, err := os.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	shaderId := CreateShader(string(shaderFile), shaderType)
+	return shaderId
+}
 
 func CreateShader(shaderSource string, shaderType uint32) ShaderID {
 	shaderId := gl.CreateShader(shaderType)
@@ -35,9 +48,9 @@ func CreateShader(shaderSource string, shaderType uint32) ShaderID {
 	return ShaderID(shaderId)
 }
 
-func CreateProgram(vertSource string, fragSource string) ProgramID {
-	vert := CreateShader(vertSource, gl.VERTEX_SHADER)
-	frag := CreateShader(fragSource, gl.FRAGMENT_SHADER)
+func CreateProgram(vertPath string, fragPath string) ProgramID {
+	vert := LoadShader(vertPath, gl.VERTEX_SHADER)
+	frag := LoadShader(fragPath, gl.FRAGMENT_SHADER)
 
 	shaderProgram := gl.CreateProgram()
 	gl.AttachShader(shaderProgram, uint32(vert))
@@ -84,4 +97,59 @@ func UseProgram(id ProgramID) {
 
 func BindVertexArray(id VAOID) {
 	gl.BindVertexArray(uint32(id))
+}
+
+// shaders
+type Shader struct {
+	id          ProgramID
+	vertPath    string
+	vertModTime time.Time
+	fragPath    string
+	fragModTime time.Time
+}
+
+func NewShader(vertPath string, fragPath string) *Shader {
+	id := CreateProgram(vertPath, fragPath)
+
+	s := Shader{
+		id:       id,
+		vertPath: vertPath,
+		fragPath: fragPath,
+
+		vertModTime: getModTime(vertPath),
+		fragModTime: getModTime(fragPath),
+	}
+
+	return &s
+}
+
+func (s *Shader) Use() {
+	UseProgram(s.id)
+}
+
+func (s *Shader) CheckShadersForChanges() {
+	vertModTime := getModTime(s.vertPath)
+	fragModTime := getModTime(s.fragPath)
+	if v, f := !vertModTime.Equal(s.vertModTime), !fragModTime.Equal(s.fragModTime); v || f {
+		if v {
+			fmt.Printf("A vertex shader file has been modified: %s\n", s.vertPath)
+			s.vertModTime = vertModTime
+		}
+		if f {
+			fmt.Printf("A fragment shader file has been modified: %s\n", s.fragPath)
+			s.fragModTime = fragModTime
+		}
+		id := CreateProgram(s.vertPath, s.fragPath)
+
+		gl.DeleteProgram(uint32(s.id))
+		s.id = id
+	}
+}
+
+func getModTime(path string) time.Time {
+	file, err := os.Stat(path)
+	if err != nil {
+		panic(err)
+	}
+	return file.ModTime()
 }

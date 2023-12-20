@@ -28,26 +28,7 @@ func main() {
 	gl.Init()
 	fmt.Println("OpenGL Version", GetVersion())
 
-	fragmentShaderSource :=
-		`
-		#version 330 core
-		out vec4 FragColor;
-
-		void main() {
-			FragColor = vec4(0.0f,0.5f,0.75f,1.0f);
-		}
-		`
-
-	vertexShaderSource :=
-		`
-		#version 330 core
-		layout (location = 0) in vec3 aPos;
-
-		void main() {
-			gl_Position = vec4(aPos.x, aPos.y,aPos.z,1.0);
-		}
-		`
-	shaderProgram := CreateProgram(vertexShaderSource, fragmentShaderSource)
+	shaderProgram := NewShader("shaders/test.vert", "shaders/test.frag")
 
 	verticies := []float32{
 		-0.5, -0.5, 0.0,
@@ -74,10 +55,11 @@ func main() {
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
-		UseProgram(shaderProgram)
+		shaderProgram.Use()
 		BindVertexArray(VAO)
 		gl.DrawArrays(gl.TRIANGLES, 0, 3)
 
 		window.GLSwap()
+		shaderProgram.CheckShadersForChanges()
 	}
 }
