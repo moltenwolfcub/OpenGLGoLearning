@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/veandco/go-sdl2/sdl"
@@ -54,6 +55,8 @@ func main() {
 	gl.EnableVertexAttribArray(1)
 	gl.BindVertexArray(0)
 
+	var x, y float32 = 0.0, 0.0
+
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
@@ -66,10 +69,14 @@ func main() {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		shaderProgram.Use()
+		shaderProgram.SetFloat("x", float32(math.Sin(float64(x))))
+		shaderProgram.SetFloat("y", float32(math.Cos(float64(y))))
 		BindVertexArray(VAO)
 		gl.DrawElementsWithOffset(gl.TRIANGLES, 6, gl.UNSIGNED_INT, uintptr(0))
 
 		window.GLSwap()
 		shaderProgram.CheckShadersForChanges()
+		x += 0.01
+		y += 0.01
 	}
 }

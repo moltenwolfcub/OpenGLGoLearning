@@ -132,6 +132,13 @@ func (s *Shader) Use() {
 	UseProgram(s.id)
 }
 
+func (s *Shader) SetFloat(name string, value float32) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	gl.Uniform1f(loc, value)
+}
+
 func (s *Shader) CheckShadersForChanges() {
 	vertModTime := getModTime(s.vertPath)
 	fragModTime := getModTime(s.fragPath)
