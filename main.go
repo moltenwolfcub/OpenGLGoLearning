@@ -30,18 +30,27 @@ func main() {
 
 	shaderProgram := NewShader("shaders/test.vert", "shaders/test.frag")
 
+	//XYZ,UV
 	verticies := []float32{
-		-0.5, -0.5, 0.0,
-		0.5, -0.5, 0.0,
-		0.0, 0.5, 0.0,
+		0.5, 0.5, 0.0, 1.0, 1.0,
+		0.5, -0.5, 0.0, 1.0, 0.0,
+		-0.5, -0.5, 0.0, 0.0, 0.0,
+		-0.5, 0.5, 0.0, 0.0, 1.0,
 	}
-	GenBindBuffer(gl.ARRAY_BUFFER)
+	indices := []uint32{
+		0, 1, 3, // triangle1
+		1, 2, 3, // triangle2
+	}
+
+	GenBindBuffer(gl.ARRAY_BUFFER) //VBO
 	VAO := GenBindVertexArray()
-
 	BufferData(gl.ARRAY_BUFFER, verticies, gl.STATIC_DRAW)
+	GenBindBuffer(gl.ELEMENT_ARRAY_BUFFER) //EBO
+	BufferData(gl.ELEMENT_ARRAY_BUFFER, indices, gl.STATIC_DRAW)
 
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 3*4, nil)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, nil)
 	gl.EnableVertexAttribArray(0)
+	gl.VertexAttribPointerWithOffset(2, 2, gl.FLOAT, false, 5*4, uintptr(2*4))
 	gl.BindVertexArray(0)
 
 	for {
@@ -57,7 +66,7 @@ func main() {
 
 		shaderProgram.Use()
 		BindVertexArray(VAO)
-		gl.DrawArrays(gl.TRIANGLES, 0, 3)
+		gl.DrawElementsWithOffset(gl.TRIANGLES, 6, gl.UNSIGNED_INT, uintptr(0))
 
 		window.GLSwap()
 		shaderProgram.CheckShadersForChanges()

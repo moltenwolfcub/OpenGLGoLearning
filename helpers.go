@@ -16,8 +16,7 @@ func GetVersion() string {
 
 type ShaderID uint32
 type ProgramID uint32
-type VBOID uint32
-type VAOID uint32
+type BufferID uint32
 
 func LoadShader(path string, shaderType uint32) ShaderID {
 	shaderFile, err := os.ReadFile(path)
@@ -71,17 +70,23 @@ func CreateProgram(vertPath string, fragPath string) ProgramID {
 	return ProgramID(shaderProgram)
 }
 
-func GenBindBuffer(target uint32) VBOID {
-	var VBO uint32
-	gl.GenBuffers(1, &VBO)
-	gl.BindBuffer(target, VBO)
-	return VBOID(VBO)
+func GenBindBuffer(target uint32) BufferID {
+	var buffer uint32
+	gl.GenBuffers(1, &buffer)
+	gl.BindBuffer(target, buffer)
+	return BufferID(buffer)
 }
-func GenBindVertexArray() VAOID {
+func GenBindVertexArray() BufferID {
 	var VAO uint32
 	gl.GenVertexArrays(1, &VAO)
 	gl.BindVertexArray(VAO)
-	return VAOID(VAO)
+	return BufferID(VAO)
+}
+
+func GenEBO() BufferID {
+	var EBO uint32
+	gl.GenBuffers(1, &EBO)
+	return BufferID(EBO)
 }
 
 func BufferData[T any](target uint32, data []T, usage uint32) {
@@ -95,7 +100,7 @@ func UseProgram(id ProgramID) {
 	gl.UseProgram(uint32(id))
 }
 
-func BindVertexArray(id VAOID) {
+func BindVertexArray(id BufferID) {
 	gl.BindVertexArray(uint32(id))
 }
 
