@@ -50,7 +50,8 @@ func main() {
 
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, nil)
 	gl.EnableVertexAttribArray(0)
-	gl.VertexAttribPointerWithOffset(2, 2, gl.FLOAT, false, 5*4, uintptr(2*4))
+	gl.VertexAttribPointerWithOffset(1, 2, gl.FLOAT, false, 5*4, uintptr(3*4))
+	gl.EnableVertexAttribArray(1)
 	gl.BindVertexArray(0)
 
 	for {
