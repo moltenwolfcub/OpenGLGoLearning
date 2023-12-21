@@ -29,7 +29,7 @@ func main() {
 	gl.Init()
 	fmt.Println("OpenGL Version", GetVersion())
 
-	shaderProgram := NewShader("shaders/test.vert", "shaders/test.frag")
+	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/test.frag")
 
 	//XYZ,UV
 	verticies := []float32{
