@@ -29,7 +29,8 @@ func main() {
 	gl.Init()
 	fmt.Println("OpenGL Version", GetVersion())
 
-	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/test.frag")
+	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/quadTexture.frag")
+	texture := LoadTexture("assets/textures/test.png")
 
 	//XYZ,UV
 	verticies := []float32{
@@ -71,6 +72,7 @@ func main() {
 		shaderProgram.Use()
 		shaderProgram.SetFloat("x", float32(math.Sin(float64(x))))
 		shaderProgram.SetFloat("y", float32(math.Cos(float64(y))))
+		BindTexture(texture)
 		BindVertexArray(VAO)
 		gl.DrawElementsWithOffset(gl.TRIANGLES, 6, gl.UNSIGNED_INT, uintptr(0))
 
