@@ -9,6 +9,7 @@ import (
 	"unsafe"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
 )
 
 func GetVersion() string {
@@ -190,6 +191,13 @@ func (s *Shader) SetFloat(name string, value float32) {
 	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
 
 	gl.Uniform1f(loc, value)
+}
+func (s *Shader) SetMatrix4(name string, value mgl32.Mat4) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	m4 := [16]float32(value)
+	gl.UniformMatrix4fv(loc, 1, false, &m4[0])
 }
 
 func (s *Shader) CheckShadersForChanges() {
