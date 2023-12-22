@@ -38,7 +38,7 @@ func main() {
 	gl.Init()
 	fmt.Println("OpenGL Version", GetVersion())
 
-	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/quadTexture.frag")
+	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/blue.frag")
 	texture := LoadTexture("assets/textures/test.png")
 
 	//XYZ,UV
@@ -87,8 +87,15 @@ func main() {
 	}
 
 	cubePositions := []mgl32.Vec3{
-		{-1.0, 0.0, 0.0},
-		{5.0, 3.0, -10.0},
+		{0.0, 0.0, 0.0},
+		{1.1, 0.0, 0.0},
+		{2.2, 0.0, 0.0},
+		{3.3, 0.0, 0.0},
+		{4.4, 0.0, 0.0},
+		{5.5, 0.0, 0.0},
+
+		{5.0, 1.0, -5.0},
+		{-5.0, -2.0, 1.0},
 	}
 
 	GenBindBuffer(gl.ARRAY_BUFFER) //VBO
@@ -103,7 +110,7 @@ func main() {
 
 	keyboardState := sdl.GetKeyboardState()
 
-	var camX, camY, camZ float32 = 0.0, 0.0, 0.0
+	var camX, camY, camZ float32 = 0.0, 0.0, -2.0
 
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
@@ -148,9 +155,12 @@ func main() {
 
 		for i, pos := range cubePositions {
 			modelMat := mgl32.Ident4()
-			modelMat = mgl32.Translate3D(pos.X(), pos.Y(), pos.Z()).Mul4(modelMat)
+
 			angle := 25.0 * float32(i)
-			modelMat = mgl32.HomogRotate3DY(mgl32.DegToRad(angle)).Mul4(modelMat)
+			modelMat = mgl32.HomogRotate3D(mgl32.DegToRad(angle), mgl32.Vec3{1, 0, 0}).Mul4(modelMat)
+
+			modelMat = mgl32.Translate3D(pos.X(), pos.Y(), pos.Z()).Mul4(modelMat)
+
 			shaderProgram.SetMatrix4("model", modelMat)
 			gl.DrawArrays(gl.TRIANGLES, 0, 36)
 		}
