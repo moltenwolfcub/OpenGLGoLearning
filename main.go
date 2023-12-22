@@ -101,6 +101,10 @@ func main() {
 	gl.EnableVertexAttribArray(1)
 	gl.BindVertexArray(0)
 
+	keyboardState := sdl.GetKeyboardState()
+
+	var camX, camY, camZ float32 = 0.0, 0.0, 0.0
+
 	for {
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
@@ -112,11 +116,30 @@ func main() {
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
+		if keyboardState[sdl.SCANCODE_W] != 0 {
+			camZ += 0.1
+		}
+		if keyboardState[sdl.SCANCODE_S] != 0 {
+			camZ -= 0.1
+		}
+		if keyboardState[sdl.SCANCODE_A] != 0 {
+			camX += 0.1
+		}
+		if keyboardState[sdl.SCANCODE_D] != 0 {
+			camX -= 0.1
+		}
+		if keyboardState[sdl.SCANCODE_SPACE] != 0 {
+			camY -= 0.1
+		}
+		if keyboardState[sdl.SCANCODE_LSHIFT] != 0 {
+			camY += 0.1
+		}
+
 		shaderProgram.Use()
 
 		projMat := mgl32.Perspective(mgl32.DegToRad(cameraFov), float32(windowWidth)/float32(windowHeight), cameraNear, cameraFar)
 		viewMat := mgl32.Ident4()
-		viewMat = mgl32.Translate3D(0.0, 0.0, -3.0).Mul4(viewMat)
+		viewMat = mgl32.Translate3D(camX, camY, camZ).Mul4(viewMat)
 		shaderProgram.SetMatrix4("proj", projMat)
 		shaderProgram.SetMatrix4("view", viewMat)
 
