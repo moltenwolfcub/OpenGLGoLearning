@@ -36,10 +36,12 @@ func main() {
 	defer window.Destroy()
 
 	gl.Init()
+	gl.Enable(gl.DEPTH_TEST)
+	// gl.Enable(gl.CULL_FACE) TODO FACE CULLING https://learnopengl.com/Advanced-OpenGL/Face-culling
 	fmt.Println("OpenGL Version", GetVersion())
 
-	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/blue.frag")
-	texture := LoadTexture("assets/textures/test.png")
+	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/quadTexture.frag")
+	texture := LoadTexture("assets/textures/metal/metalbox_full.png")
 
 	//XYZ,UV
 	verticies := []float32{
@@ -121,7 +123,7 @@ func main() {
 		}
 
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		if keyboardState[sdl.SCANCODE_W] != 0 {
 			camZ += 0.1
