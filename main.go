@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
@@ -29,6 +30,7 @@ func main() {
 	sdl.GLSetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 3)
 
 	window, err := sdl.CreateWindow("Learning Project", 200, 200, windowWidth, windowHeight, sdl.WINDOW_OPENGL)
+	sdl.SetRelativeMouseMode(true)
 	if err != nil {
 		panic(err)
 	}
@@ -112,43 +114,44 @@ func main() {
 
 	keyboardState := sdl.GetKeyboardState()
 
-	var camX, camY, camZ float32 = 0.0, 0.0, -2.0
+	camPos := mgl32.Vec3{0.0, 0.0, -2.0}
+	worldUp := mgl32.Vec3{0.0, 1.0, 0.0}
+	camera := NewCamera(camPos, worldUp, 0, 0, 0.025, 0.1)
 
+	elapsedTime := float32(0)
+	prevMouseX, prevMouseY, _ := sdl.GetMouseState()
 	for {
+		frameStart := time.Now()
+
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
 			switch event.(type) {
 			case *sdl.QuitEvent:
 				return
 			}
 		}
+		if keyboardState[sdl.SCANCODE_ESCAPE] != 0 {
+			return
+		}
 
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-		if keyboardState[sdl.SCANCODE_W] != 0 {
-			camZ += 0.1
-		}
-		if keyboardState[sdl.SCANCODE_S] != 0 {
-			camZ -= 0.1
-		}
-		if keyboardState[sdl.SCANCODE_A] != 0 {
-			camX += 0.1
-		}
-		if keyboardState[sdl.SCANCODE_D] != 0 {
-			camX -= 0.1
-		}
-		if keyboardState[sdl.SCANCODE_SPACE] != 0 {
-			camY -= 0.1
-		}
-		if keyboardState[sdl.SCANCODE_LSHIFT] != 0 {
-			camY += 0.1
-		}
+		dirs := NewMoveDirs(
+			keyboardState[sdl.SCANCODE_W] != 0,
+			keyboardState[sdl.SCANCODE_S] != 0,
+			keyboardState[sdl.SCANCODE_D] != 0,
+			keyboardState[sdl.SCANCODE_A] != 0,
+			keyboardState[sdl.SCANCODE_SPACE] != 0,
+			keyboardState[sdl.SCANCODE_LSHIFT] != 0,
+		)
+		mouseX, mouseY, _ := sdl.GetMouseState()
+
+		camera.UpdateCamera(dirs, elapsedTime, float32(mouseX-prevMouseX), -float32(mouseY-prevMouseY))
 
 		shaderProgram.Use()
 
 		projMat := mgl32.Perspective(mgl32.DegToRad(cameraFov), float32(windowWidth)/float32(windowHeight), cameraNear, cameraFar)
-		viewMat := mgl32.Ident4()
-		viewMat = mgl32.Translate3D(camX, camY, camZ).Mul4(viewMat)
+		viewMat := camera.GetViewMatrix()
 		shaderProgram.SetMatrix4("proj", projMat)
 		shaderProgram.SetMatrix4("view", viewMat)
 
@@ -169,5 +172,8 @@ func main() {
 
 		window.GLSwap()
 		shaderProgram.CheckShadersForChanges()
+
+		elapsedTime = float32(time.Since(frameStart).Seconds() * 1000)
+		prevMouseX, prevMouseY = mouseX, mouseY
 	}
 }
