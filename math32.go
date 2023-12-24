@@ -26,3 +26,7 @@ func Sin32Deg(x float32) float32 {
 func Cos32Deg(x float32) float32 {
 	return Cos32(mgl32.DegToRad(x))
 }
+
+func Mod32(a, b float32) float32 {
+	return float32(math.Mod(float64(a), float64(b)))
+}

@@ -328,15 +328,18 @@ func (c *Camera) UpdateCamera(dir MovementDirs, deltaTime, mouseDx, mouseDy floa
 	mouseDy *= c.MouseSensitivity
 
 	c.Yaw += mouseDx
-	c.Pitch += mouseDy
+	if c.Yaw < 0 {
+		c.Yaw = 360 - mgl32.Abs(c.Yaw)
+	} else if c.Yaw >= 360 {
+		c.Yaw -= 360
+	}
 
-	// if c.Pitch > 90 {
-	// 	c.Pitch = 90
-	// }
-	// if c.Pitch < -90 {
-	// 	c.Pitch = -90
-	// }
-	// fmt.Println(c.Pitch)
+	c.Pitch += mouseDy
+	if c.Pitch >= 90 {
+		c.Pitch = 89.9999
+	} else if c.Pitch <= -90 {
+		c.Pitch = -89.9999
+	}
 
 	c.updateVectors()
 }

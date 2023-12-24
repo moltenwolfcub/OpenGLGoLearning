@@ -42,6 +42,8 @@ func main() {
 	// gl.Enable(gl.CULL_FACE) TODO FACE CULLING https://learnopengl.com/Advanced-OpenGL/Face-culling
 	fmt.Println("OpenGL Version", GetVersion())
 
+	window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
+
 	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/quadTexture.frag")
 	texture := LoadTexture("assets/textures/metal/metalbox_full.png")
 
@@ -116,10 +118,9 @@ func main() {
 
 	camPos := mgl32.Vec3{0.0, 0.0, -2.0}
 	worldUp := mgl32.Vec3{0.0, 1.0, 0.0}
-	camera := NewCamera(camPos, worldUp, 0, 0, 0.025, 0.1)
+	camera := NewCamera(camPos, worldUp, 90, 0, 0.025, 0.1)
 
 	elapsedTime := float32(0)
-	prevMouseX, prevMouseY, _ := sdl.GetMouseState()
 	for {
 		frameStart := time.Now()
 
@@ -131,6 +132,9 @@ func main() {
 		}
 		if keyboardState[sdl.SCANCODE_ESCAPE] != 0 {
 			return
+		}
+		if keyboardState[sdl.SCANCODE_I] != 0 {
+			fmt.Printf("Yaw: %v, Pitch %v\n", camera.Yaw, camera.Pitch)
 		}
 
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
@@ -145,8 +149,9 @@ func main() {
 			keyboardState[sdl.SCANCODE_LSHIFT] != 0,
 		)
 		mouseX, mouseY, _ := sdl.GetMouseState()
+		mouseDx, mouseDy := float32(mouseX-windowWidth/2), -float32(mouseY-windowHeight/2)
 
-		camera.UpdateCamera(dirs, elapsedTime, float32(mouseX-prevMouseX), -float32(mouseY-prevMouseY))
+		camera.UpdateCamera(dirs, elapsedTime, mouseDx, mouseDy)
 
 		shaderProgram.Use()
 
@@ -174,6 +179,9 @@ func main() {
 		shaderProgram.CheckShadersForChanges()
 
 		elapsedTime = float32(time.Since(frameStart).Seconds() * 1000)
-		prevMouseX, prevMouseY = mouseX, mouseY
+
+		sdl.EventState(sdl.MOUSEMOTION, sdl.IGNORE)
+		window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
+		sdl.EventState(sdl.MOUSEMOTION, sdl.ENABLE)
 	}
 }
