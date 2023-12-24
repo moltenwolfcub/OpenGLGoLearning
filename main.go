@@ -114,6 +114,9 @@ func main() {
 	gl.EnableVertexAttribArray(1)
 	gl.BindVertexArray(0)
 
+	focused := true
+	focusCooldown := 0
+
 	keyboardState := sdl.GetKeyboardState()
 
 	camPos := mgl32.Vec3{0.0, 0.0, -2.0}
@@ -136,23 +139,42 @@ func main() {
 		if keyboardState[sdl.SCANCODE_I] != 0 {
 			fmt.Printf("Yaw: %v, Pitch %v\n", camera.Yaw, camera.Pitch)
 		}
+		if focusCooldown == 0 {
+			if keyboardState[sdl.SCANCODE_F] != 0 {
+				focused = !focused
+				sdl.SetRelativeMouseMode(focused)
+
+				if focused {
+					window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
+				}
+
+				focusCooldown = 10
+			}
+		} else {
+			if focusCooldown < 0 {
+				focusCooldown = 0
+			} else {
+				focusCooldown--
+			}
+		}
 
 		gl.ClearColor(0.0, 0.0, 0.0, 0.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-		dirs := NewMoveDirs(
-			keyboardState[sdl.SCANCODE_W] != 0,
-			keyboardState[sdl.SCANCODE_S] != 0,
-			keyboardState[sdl.SCANCODE_D] != 0,
-			keyboardState[sdl.SCANCODE_A] != 0,
-			keyboardState[sdl.SCANCODE_SPACE] != 0,
-			keyboardState[sdl.SCANCODE_LSHIFT] != 0,
-		)
-		mouseX, mouseY, _ := sdl.GetMouseState()
-		mouseDx, mouseDy := float32(mouseX-windowWidth/2), -float32(mouseY-windowHeight/2)
+		if focused {
+			dirs := NewMoveDirs(
+				keyboardState[sdl.SCANCODE_W] != 0,
+				keyboardState[sdl.SCANCODE_S] != 0,
+				keyboardState[sdl.SCANCODE_D] != 0,
+				keyboardState[sdl.SCANCODE_A] != 0,
+				keyboardState[sdl.SCANCODE_SPACE] != 0,
+				keyboardState[sdl.SCANCODE_LSHIFT] != 0,
+			)
+			mouseX, mouseY, _ := sdl.GetMouseState()
+			mouseDx, mouseDy := float32(mouseX-windowWidth/2), -float32(mouseY-windowHeight/2)
 
-		camera.UpdateCamera(dirs, elapsedTime, mouseDx, mouseDy)
-
+			camera.UpdateCamera(dirs, elapsedTime, mouseDx, mouseDy)
+		}
 		shaderProgram.Use()
 
 		projMat := mgl32.Perspective(mgl32.DegToRad(cameraFov), float32(windowWidth)/float32(windowHeight), cameraNear, cameraFar)
@@ -180,8 +202,10 @@ func main() {
 
 		elapsedTime = float32(time.Since(frameStart).Seconds() * 1000)
 
-		sdl.EventState(sdl.MOUSEMOTION, sdl.IGNORE)
-		window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
-		sdl.EventState(sdl.MOUSEMOTION, sdl.ENABLE)
+		if focused {
+			sdl.EventState(sdl.MOUSEMOTION, sdl.IGNORE)
+			window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
+			sdl.EventState(sdl.MOUSEMOTION, sdl.ENABLE)
+		}
 	}
 }
