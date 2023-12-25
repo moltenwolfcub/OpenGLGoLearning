@@ -50,11 +50,11 @@ func main() {
 	//XYZ,UV
 	verticies := []float32{
 		-0.5, -0.5, -0.5, 0.0, 0.0,
+		0.5, 0.5, -0.5, 1.0, 1.0,
 		0.5, -0.5, -0.5, 1.0, 0.0,
 		0.5, 0.5, -0.5, 1.0, 1.0,
-		0.5, 0.5, -0.5, 1.0, 1.0,
-		-0.5, 0.5, -0.5, 0.0, 1.0,
 		-0.5, -0.5, -0.5, 0.0, 0.0,
+		-0.5, 0.5, -0.5, 0.0, 1.0,
 
 		-0.5, -0.5, 0.5, 0.0, 0.0,
 		0.5, -0.5, 0.5, 1.0, 0.0,
@@ -71,11 +71,11 @@ func main() {
 		-0.5, 0.5, 0.5, 1.0, 0.0,
 
 		0.5, 0.5, 0.5, 1.0, 0.0,
+		0.5, -0.5, -0.5, 0.0, 1.0,
 		0.5, 0.5, -0.5, 1.0, 1.0,
 		0.5, -0.5, -0.5, 0.0, 1.0,
-		0.5, -0.5, -0.5, 0.0, 1.0,
-		0.5, -0.5, 0.5, 0.0, 0.0,
 		0.5, 0.5, 0.5, 1.0, 0.0,
+		0.5, -0.5, 0.5, 0.0, 0.0,
 
 		-0.5, -0.5, -0.5, 0.0, 1.0,
 		0.5, -0.5, -0.5, 1.0, 1.0,
@@ -85,11 +85,34 @@ func main() {
 		-0.5, -0.5, -0.5, 0.0, 1.0,
 
 		-0.5, 0.5, -0.5, 0.0, 1.0,
+		0.5, 0.5, 0.5, 1.0, 0.0,
 		0.5, 0.5, -0.5, 1.0, 1.0,
 		0.5, 0.5, 0.5, 1.0, 0.0,
-		0.5, 0.5, 0.5, 1.0, 0.0,
-		-0.5, 0.5, 0.5, 0.0, 0.0,
 		-0.5, 0.5, -0.5, 0.0, 1.0,
+		-0.5, 0.5, 0.5, 0.0, 0.0,
+	}
+
+	normals := make([]float32, 36*3)
+	for tri := 0; tri < 12; tri++ {
+		index := tri * 15
+		p1 := mgl32.Vec3{verticies[index], verticies[index+1], verticies[index+2]}
+		index += 5
+		p2 := mgl32.Vec3{verticies[index], verticies[index+1], verticies[index+2]}
+		index += 5
+		p3 := mgl32.Vec3{verticies[index], verticies[index+1], verticies[index+2]}
+
+		normal := TriangleNormal(p1, p2, p3)
+		normals[tri*9+0] = normal.X()
+		normals[tri*9+1] = normal.Y()
+		normals[tri*9+2] = normal.Z()
+
+		normals[tri*9+3] = normal.X()
+		normals[tri*9+4] = normal.Y()
+		normals[tri*9+5] = normal.Z()
+
+		normals[tri*9+6] = normal.X()
+		normals[tri*9+7] = normal.Y()
+		normals[tri*9+8] = normal.Z()
 	}
 
 	cubePositions := []mgl32.Vec3{
@@ -108,10 +131,19 @@ func main() {
 	VAO := GenBindVertexArray()
 	BufferData(gl.ARRAY_BUFFER, verticies, gl.STATIC_DRAW)
 
+	BindVertexArray(VAO)
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, nil)
 	gl.EnableVertexAttribArray(0)
 	gl.VertexAttribPointerWithOffset(1, 2, gl.FLOAT, false, 5*4, uintptr(3*4))
 	gl.EnableVertexAttribArray(1)
+
+	NAO := GenBindBuffer(gl.ARRAY_BUFFER)
+	BufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW)
+
+	BindVertexArray(NAO)
+	gl.VertexAttribPointer(2, 3, gl.FLOAT, false, 3*4, nil)
+	gl.EnableVertexAttribArray(2)
+
 	gl.BindVertexArray(0)
 
 	focused := true
@@ -121,7 +153,7 @@ func main() {
 
 	camPos := mgl32.Vec3{0.0, 0.0, -2.0}
 	worldUp := mgl32.Vec3{0.0, 1.0, 0.0}
-	camera := NewCamera(camPos, worldUp, 90, 0, 0.025, 0.1)
+	camera := NewCamera(camPos, worldUp, 90, 0, 0.0025, 0.1)
 
 	elapsedTime := float32(0)
 	for {
@@ -182,13 +214,17 @@ func main() {
 		shaderProgram.SetMatrix4("proj", projMat)
 		shaderProgram.SetMatrix4("view", viewMat)
 
+		shaderProgram.SetVec3("lightPos", mgl32.Vec3{3.3, 2, 0})
+		shaderProgram.SetVec3("lightColor", mgl32.Vec3{1, 0, 0})
+		shaderProgram.SetVec3("ambientLight", mgl32.Vec3{0.3, 0, 0})
+
 		BindTexture(texture)
 		BindVertexArray(VAO)
 
 		for i, pos := range cubePositions {
 			modelMat := mgl32.Ident4()
 
-			angle := 25.0 * float32(i)
+			angle := 25.0 * float32(i) * 0
 			modelMat = mgl32.HomogRotate3D(mgl32.DegToRad(angle), mgl32.Vec3{1, 0, 0}).Mul4(modelMat)
 
 			modelMat = mgl32.Translate3D(pos.X(), pos.Y(), pos.Z()).Mul4(modelMat)

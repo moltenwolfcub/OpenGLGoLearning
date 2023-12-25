@@ -158,6 +158,13 @@ func BindVertexArray(id BufferID) {
 	gl.BindVertexArray(uint32(id))
 }
 
+func TriangleNormal(p1, p2, p3 mgl32.Vec3) mgl32.Vec3 {
+	U := p2.Sub(p1)
+	V := p3.Sub(p1)
+
+	return U.Cross(V).Normalize()
+}
+
 // shaders
 type Shader struct {
 	id          ProgramID
@@ -198,6 +205,13 @@ func (s *Shader) SetMatrix4(name string, value mgl32.Mat4) {
 
 	m4 := [16]float32(value)
 	gl.UniformMatrix4fv(loc, 1, false, &m4[0])
+}
+func (s *Shader) SetVec3(name string, value mgl32.Vec3) {
+	name_cstr := gl.Str(name + "\x00")
+	loc := gl.GetUniformLocation(uint32(s.id), name_cstr)
+
+	v3 := [3]float32(value)
+	gl.Uniform3fv(loc, 1, &v3[0])
 }
 
 func (s *Shader) CheckShadersForChanges() {
