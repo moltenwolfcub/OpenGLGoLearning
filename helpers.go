@@ -334,7 +334,13 @@ func (c *Camera) GetViewMatrix() mgl32.Mat4 {
 func (c *Camera) UpdateCamera(dir MovementDirs, deltaTime, mouseDx, mouseDy float32) {
 	magnitude := c.MovementSpeed * deltaTime
 
-	c.Pos = c.Pos.Add(c.Forward.Mul(magnitude).Mul(float32(dir.Forward)))
+	//remove Z component and normalize
+	forwardMovement := mgl32.Vec3{c.Forward.X(), 0, c.Forward.Z()}
+	if forwardMovement.Len() > 0 {
+		forwardMovement = forwardMovement.Normalize()
+	}
+
+	c.Pos = c.Pos.Add(forwardMovement.Mul(magnitude).Mul(float32(dir.Forward)))
 	c.Pos = c.Pos.Add(c.Right.Mul(magnitude).Mul(float32(dir.Right)))
 	c.Pos = c.Pos.Add(c.WorldUp.Mul(magnitude).Mul(float32(dir.Up)))
 

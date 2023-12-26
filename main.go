@@ -216,8 +216,8 @@ func main() {
 
 		shaderProgram.SetVec3("viewPos", camera.Pos)
 		shaderProgram.SetVec3("lightPos", mgl32.Vec3{3.3, 1, 0})
-		shaderProgram.SetVec3("lightColor", mgl32.Vec3{1, 0, 0})
-		shaderProgram.SetVec3("ambientLight", mgl32.Vec3{0.3, 0, 0})
+		shaderProgram.SetVec3("lightColor", mgl32.Vec3{1, 1, 1})
+		shaderProgram.SetVec3("ambientLight", mgl32.Vec3{0.3, 0.3, 0.3})
 
 		BindTexture(texture)
 		BindVertexArray(VAO)
