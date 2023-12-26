@@ -39,7 +39,7 @@ func main() {
 
 	gl.Init()
 	gl.Enable(gl.DEPTH_TEST)
-	// gl.Enable(gl.CULL_FACE) TODO FACE CULLING https://learnopengl.com/Advanced-OpenGL/Face-culling
+	gl.Enable(gl.CULL_FACE)
 	fmt.Println("OpenGL Version", GetVersion())
 
 	window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
