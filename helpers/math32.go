@@ -1,4 +1,4 @@
-package main
+package helpers
 
 /*
 Type conversions make the main code look messy

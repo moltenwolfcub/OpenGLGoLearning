@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-gl/gl/v3.3-core/gl"
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/moltenwolfcub/OpenGLGoLearning/helpers"
 	"github.com/veandco/go-sdl2/sdl"
 )
 
@@ -42,12 +43,12 @@ func main() {
 	gl.Init()
 	gl.Enable(gl.DEPTH_TEST)
 	gl.Enable(gl.CULL_FACE)
-	fmt.Println("OpenGL Version", GetVersion())
+	fmt.Println("OpenGL Version", helpers.GetVersion())
 
 	window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
 
-	shaderProgram := NewShader("assets/shaders/test.vert", "assets/shaders/quadTexture.frag")
-	texture := LoadTexture("assets/textures/metal/metalbox_full.png")
+	shaderProgram := helpers.NewShader("assets/shaders/test.vert", "assets/shaders/quadTexture.frag")
+	texture := helpers.LoadTexture("assets/textures/metal/metalbox_full.png")
 
 	//XYZ,UV
 	verticies := []float32{
@@ -103,7 +104,7 @@ func main() {
 		index += 5
 		p3 := mgl32.Vec3{verticies[index], verticies[index+1], verticies[index+2]}
 
-		normal := TriangleNormal(p1, p2, p3)
+		normal := helpers.TriangleNormal(p1, p2, p3)
 		normals[tri*9+0] = normal.X()
 		normals[tri*9+1] = normal.Y()
 		normals[tri*9+2] = normal.Z()
@@ -129,20 +130,20 @@ func main() {
 		{-5.0, -2.0, 1.0},
 	}
 
-	GenBindBuffer(gl.ARRAY_BUFFER) //VBO
-	VAO := GenBindVertexArray()
-	BufferData(gl.ARRAY_BUFFER, verticies, gl.STATIC_DRAW)
+	helpers.GenBindBuffer(gl.ARRAY_BUFFER) //VBO
+	VAO := helpers.GenBindVertexArray()
+	helpers.BufferData(gl.ARRAY_BUFFER, verticies, gl.STATIC_DRAW)
 
-	BindVertexArray(VAO)
+	helpers.BindVertexArray(VAO)
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, nil)
 	gl.EnableVertexAttribArray(0)
 	gl.VertexAttribPointerWithOffset(1, 2, gl.FLOAT, false, 5*4, uintptr(3*4))
 	gl.EnableVertexAttribArray(1)
 
-	NAO := GenBindBuffer(gl.ARRAY_BUFFER)
-	BufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW)
+	NAO := helpers.GenBindBuffer(gl.ARRAY_BUFFER)
+	helpers.BufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW)
 
-	BindVertexArray(NAO)
+	helpers.BindVertexArray(NAO)
 	gl.VertexAttribPointer(2, 3, gl.FLOAT, false, 3*4, nil)
 	gl.EnableVertexAttribArray(2)
 
@@ -155,7 +156,7 @@ func main() {
 
 	camPos := mgl32.Vec3{0.0, 0.0, -2.0}
 	worldUp := mgl32.Vec3{0.0, 1.0, 0.0}
-	camera := NewCamera(camPos, worldUp, 90, 0, 0.0025, 0.1)
+	camera := helpers.NewCamera(camPos, worldUp, 90, 0, 0.0025, 0.1)
 
 	elapsedTime := float32(0)
 	for {
@@ -201,7 +202,7 @@ func main() {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		if focused {
-			dirs := NewMoveDirs(
+			dirs := helpers.NewMoveDirs(
 				keyboardState[sdl.SCANCODE_W] != 0,
 				keyboardState[sdl.SCANCODE_S] != 0,
 				keyboardState[sdl.SCANCODE_D] != 0,
@@ -226,8 +227,8 @@ func main() {
 		shaderProgram.SetVec3("lightColor", mgl32.Vec3{1, 1, 1})
 		shaderProgram.SetVec3("ambientLight", mgl32.Vec3{0.3, 0.3, 0.3})
 
-		BindTexture(texture)
-		BindVertexArray(VAO)
+		helpers.BindTexture(texture)
+		helpers.BindVertexArray(VAO)
 
 		for i, pos := range cubePositions {
 			modelMat := mgl32.Ident4()
