@@ -10,12 +10,14 @@ import (
 )
 
 const (
-	windowWidth  int32 = 1280
-	windowHeight int32 = 720
-
 	cameraFov  float32 = 45
 	cameraNear float32 = 0.1
 	cameraFar  float32 = 100.0
+)
+
+var (
+	windowWidth  int32 = 1280
+	windowHeight int32 = 720
 )
 
 func main() {
@@ -29,7 +31,7 @@ func main() {
 	sdl.GLSetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION, 3)
 	sdl.GLSetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 3)
 
-	window, err := sdl.CreateWindow("Learning Project", 200, 200, windowWidth, windowHeight, sdl.WINDOW_OPENGL)
+	window, err := sdl.CreateWindow("Learning Project", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, windowWidth, windowHeight, sdl.WINDOW_OPENGL|sdl.WINDOW_RESIZABLE)
 	sdl.SetRelativeMouseMode(true)
 	if err != nil {
 		panic(err)
@@ -160,9 +162,14 @@ func main() {
 		frameStart := time.Now()
 
 		for event := sdl.PollEvent(); event != nil; event = sdl.PollEvent() {
-			switch event.(type) {
+			switch e := event.(type) {
 			case *sdl.QuitEvent:
 				return
+			case *sdl.WindowEvent:
+				if e.Event == sdl.WINDOWEVENT_RESIZED {
+					windowWidth, windowHeight = e.Data1, e.Data2
+					gl.Viewport(0, 0, windowWidth, windowHeight)
+				}
 			}
 		}
 		if keyboardState[sdl.SCANCODE_ESCAPE] != 0 {
