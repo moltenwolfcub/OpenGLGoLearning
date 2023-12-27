@@ -22,27 +22,9 @@ var (
 )
 
 func main() {
-	err := sdl.Init(sdl.INIT_EVERYTHING)
-	if err != nil {
-		panic(err)
-	}
-	defer sdl.Quit()
+	window, cleanup := helpers.SetupFPSWindow("Learning Project", windowWidth, windowHeight)
+	defer cleanup()
 
-	sdl.GLSetAttribute(sdl.GL_CONTEXT_PROFILE_MASK, sdl.GL_CONTEXT_PROFILE_CORE)
-	sdl.GLSetAttribute(sdl.GL_CONTEXT_MAJOR_VERSION, 3)
-	sdl.GLSetAttribute(sdl.GL_CONTEXT_MINOR_VERSION, 3)
-
-	window, err := sdl.CreateWindow("Learning Project", sdl.WINDOWPOS_CENTERED, sdl.WINDOWPOS_CENTERED, windowWidth, windowHeight, sdl.WINDOW_OPENGL|sdl.WINDOW_RESIZABLE)
-	sdl.SetRelativeMouseMode(true)
-	if err != nil {
-		panic(err)
-	}
-	window.GLCreateContext()
-	defer window.Destroy()
-
-	gl.Init()
-	gl.Enable(gl.DEPTH_TEST)
-	gl.Enable(gl.CULL_FACE)
 	fmt.Println("OpenGL Version", helpers.GetVersion())
 
 	window.WarpMouseInWindow(windowWidth/2, windowHeight/2)
@@ -131,21 +113,13 @@ func main() {
 	}
 
 	helpers.GenBindBuffer(gl.ARRAY_BUFFER) //VBO
-	VAO := helpers.GenBindVertexArray()
-	helpers.BufferData(gl.ARRAY_BUFFER, verticies, gl.STATIC_DRAW)
 
-	helpers.BindVertexArray(VAO)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 5*4, nil)
-	gl.EnableVertexAttribArray(0)
-	gl.VertexAttribPointerWithOffset(1, 2, gl.FLOAT, false, 5*4, uintptr(3*4))
-	gl.EnableVertexAttribArray(1)
+	bufferLoader := helpers.NewBufferLoader()
+	VAO := helpers.GenBindVertexArray()
+	bufferLoader.BuildFloatBuffer(VAO, helpers.NewBufferLayout([]int32{3, 2}, verticies))
 
 	NAO := helpers.GenBindBuffer(gl.ARRAY_BUFFER)
-	helpers.BufferData(gl.ARRAY_BUFFER, normals, gl.STATIC_DRAW)
-
-	helpers.BindVertexArray(NAO)
-	gl.VertexAttribPointer(2, 3, gl.FLOAT, false, 3*4, nil)
-	gl.EnableVertexAttribArray(2)
+	bufferLoader.BuildFloatBuffer(NAO, helpers.NewBufferLayout([]int32{3}, normals))
 
 	gl.BindVertexArray(0)
 
