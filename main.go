@@ -32,73 +32,8 @@ func main() {
 	shaderProgram := helpers.NewShader("assets/shaders/test.vert", "assets/shaders/quadTexture.frag")
 	texture := helpers.LoadTexture("assets/textures/metal/metalbox_full.png")
 
-	//XYZ,UV
-	verticies := []float32{
-		-0.5, -0.5, -0.5, 0.0, 0.0,
-		0.5, 0.5, -0.5, 1.0, 1.0,
-		0.5, -0.5, -0.5, 1.0, 0.0,
-		0.5, 0.5, -0.5, 1.0, 1.0,
-		-0.5, -0.5, -0.5, 0.0, 0.0,
-		-0.5, 0.5, -0.5, 0.0, 1.0,
-
-		-0.5, -0.5, 0.5, 0.0, 0.0,
-		0.5, -0.5, 0.5, 1.0, 0.0,
-		0.5, 0.5, 0.5, 1.0, 1.0,
-		0.5, 0.5, 0.5, 1.0, 1.0,
-		-0.5, 0.5, 0.5, 0.0, 1.0,
-		-0.5, -0.5, 0.5, 0.0, 0.0,
-
-		-0.5, 0.5, 0.5, 1.0, 0.0,
-		-0.5, 0.5, -0.5, 1.0, 1.0,
-		-0.5, -0.5, -0.5, 0.0, 1.0,
-		-0.5, -0.5, -0.5, 0.0, 1.0,
-		-0.5, -0.5, 0.5, 0.0, 0.0,
-		-0.5, 0.5, 0.5, 1.0, 0.0,
-
-		0.5, 0.5, 0.5, 1.0, 0.0,
-		0.5, -0.5, -0.5, 0.0, 1.0,
-		0.5, 0.5, -0.5, 1.0, 1.0,
-		0.5, -0.5, -0.5, 0.0, 1.0,
-		0.5, 0.5, 0.5, 1.0, 0.0,
-		0.5, -0.5, 0.5, 0.0, 0.0,
-
-		-0.5, -0.5, -0.5, 0.0, 1.0,
-		0.5, -0.5, -0.5, 1.0, 1.0,
-		0.5, -0.5, 0.5, 1.0, 0.0,
-		0.5, -0.5, 0.5, 1.0, 0.0,
-		-0.5, -0.5, 0.5, 0.0, 0.0,
-		-0.5, -0.5, -0.5, 0.0, 1.0,
-
-		-0.5, 0.5, -0.5, 0.0, 1.0,
-		0.5, 0.5, 0.5, 1.0, 0.0,
-		0.5, 0.5, -0.5, 1.0, 1.0,
-		0.5, 0.5, 0.5, 1.0, 0.0,
-		-0.5, 0.5, -0.5, 0.0, 1.0,
-		-0.5, 0.5, 0.5, 0.0, 0.0,
-	}
-
-	normals := make([]float32, 36*3)
-	for tri := 0; tri < 12; tri++ {
-		index := tri * 15
-		p1 := mgl32.Vec3{verticies[index], verticies[index+1], verticies[index+2]}
-		index += 5
-		p2 := mgl32.Vec3{verticies[index], verticies[index+1], verticies[index+2]}
-		index += 5
-		p3 := mgl32.Vec3{verticies[index], verticies[index+1], verticies[index+2]}
-
-		normal := helpers.TriangleNormal(p1, p2, p3)
-		normals[tri*9+0] = normal.X()
-		normals[tri*9+1] = normal.Y()
-		normals[tri*9+2] = normal.Z()
-
-		normals[tri*9+3] = normal.X()
-		normals[tri*9+4] = normal.Y()
-		normals[tri*9+5] = normal.Z()
-
-		normals[tri*9+6] = normal.X()
-		normals[tri*9+7] = normal.Y()
-		normals[tri*9+8] = normal.Z()
-	}
+	cube := Cube(1)
+	cubeBig := Cube(4)
 
 	cubePositions := []mgl32.Vec3{
 		{0.0, 0.0, 0.0},
@@ -111,15 +46,6 @@ func main() {
 		{5.0, 1.0, -5.0},
 		{-5.0, -2.0, 1.0},
 	}
-
-	helpers.GenBindBuffer(gl.ARRAY_BUFFER) //VBO
-
-	bufferLoader := helpers.NewBufferLoader()
-	VAO := helpers.GenBindVertexArray()
-	bufferLoader.BuildFloatBuffer(VAO, helpers.NewBufferLayout([]int32{3, 2}, verticies))
-
-	NAO := helpers.GenBindBuffer(gl.ARRAY_BUFFER)
-	bufferLoader.BuildFloatBuffer(NAO, helpers.NewBufferLayout([]int32{3}, normals))
 
 	gl.BindVertexArray(0)
 
@@ -202,19 +128,26 @@ func main() {
 		shaderProgram.SetVec3("ambientLight", mgl32.Vec3{0.3, 0.3, 0.3})
 
 		helpers.BindTexture(texture)
-		helpers.BindVertexArray(VAO)
 
-		for i, pos := range cubePositions {
+		helpers.BindVertexArray(cube.vao)
+		for _, pos := range cubePositions {
 			modelMat := mgl32.Ident4()
-
-			angle := 25.0 * float32(i) * 0
-			modelMat = mgl32.HomogRotate3D(mgl32.DegToRad(angle), mgl32.Vec3{1, 0, 0}).Mul4(modelMat)
 
 			modelMat = mgl32.Translate3D(pos.X(), pos.Y(), pos.Z()).Mul4(modelMat)
 
 			shaderProgram.SetMatrix4("model", modelMat)
 			gl.DrawArrays(gl.TRIANGLES, 0, 36)
 		}
+
+		//begin
+		helpers.BindVertexArray(cubeBig.vao)
+		modelMatBig := mgl32.Ident4()
+
+		modelMatBig = mgl32.Translate3D(0, 5, 0).Mul4(modelMatBig)
+
+		shaderProgram.SetMatrix4("model", modelMatBig)
+		gl.DrawArrays(gl.TRIANGLES, 0, 36)
+		//end
 
 		window.GLSwap()
 		shaderProgram.CheckShadersForChanges()
@@ -227,4 +160,95 @@ func main() {
 			sdl.EventState(sdl.MOUSEMOTION, sdl.ENABLE)
 		}
 	}
+}
+
+type Object struct {
+	verticies    []float32 //in XYZ UV
+	normals      []float32
+	bufferLoader *helpers.BufferLoader
+	vao          helpers.BufferID
+	nao          helpers.BufferID
+}
+
+func Cube(size float32) Object {
+	o := Object{}
+	o.verticies = []float32{
+		-size / 2, -size / 2, -size / 2, 0.0, 0.0,
+		size / 2, size / 2, -size / 2, 1.0, 1.0,
+		size / 2, -size / 2, -size / 2, 1.0, 0.0,
+		size / 2, size / 2, -size / 2, 1.0, 1.0,
+		-size / 2, -size / 2, -size / 2, 0.0, 0.0,
+		-size / 2, size / 2, -size / 2, 0.0, 1.0,
+
+		-size / 2, -size / 2, size / 2, 0.0, 0.0,
+		size / 2, -size / 2, size / 2, 1.0, 0.0,
+		size / 2, size / 2, size / 2, 1.0, 1.0,
+		size / 2, size / 2, size / 2, 1.0, 1.0,
+		-size / 2, size / 2, size / 2, 0.0, 1.0,
+		-size / 2, -size / 2, size / 2, 0.0, 0.0,
+
+		-size / 2, size / 2, size / 2, 1.0, 0.0,
+		-size / 2, size / 2, -size / 2, 1.0, 1.0,
+		-size / 2, -size / 2, -size / 2, 0.0, 1.0,
+		-size / 2, -size / 2, -size / 2, 0.0, 1.0,
+		-size / 2, -size / 2, size / 2, 0.0, 0.0,
+		-size / 2, size / 2, size / 2, 1.0, 0.0,
+
+		size / 2, size / 2, size / 2, 1.0, 0.0,
+		size / 2, -size / 2, -size / 2, 0.0, 1.0,
+		size / 2, size / 2, -size / 2, 1.0, 1.0,
+		size / 2, -size / 2, -size / 2, 0.0, 1.0,
+		size / 2, size / 2, size / 2, 1.0, 0.0,
+		size / 2, -size / 2, size / 2, 0.0, 0.0,
+
+		-size / 2, -size / 2, -size / 2, 0.0, 1.0,
+		size / 2, -size / 2, -size / 2, 1.0, 1.0,
+		size / 2, -size / 2, size / 2, 1.0, 0.0,
+		size / 2, -size / 2, size / 2, 1.0, 0.0,
+		-size / 2, -size / 2, size / 2, 0.0, 0.0,
+		-size / 2, -size / 2, -size / 2, 0.0, 1.0,
+
+		-size / 2, size / 2, -size / 2, 0.0, 1.0,
+		size / 2, size / 2, size / 2, 1.0, 0.0,
+		size / 2, size / 2, -size / 2, 1.0, 1.0,
+		size / 2, size / 2, size / 2, 1.0, 0.0,
+		-size / 2, size / 2, -size / 2, 0.0, 1.0,
+		-size / 2, size / 2, size / 2, 0.0, 0.0,
+	}
+
+	o.normals = make([]float32, 36*3)
+	for tri := 0; tri < 12; tri++ {
+		index := tri * 15
+		p1 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
+		index += 5
+		p2 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
+		index += 5
+		p3 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
+
+		normal := helpers.TriangleNormal(p1, p2, p3)
+		o.normals[tri*9+0] = normal.X()
+		o.normals[tri*9+1] = normal.Y()
+		o.normals[tri*9+2] = normal.Z()
+
+		o.normals[tri*9+3] = normal.X()
+		o.normals[tri*9+4] = normal.Y()
+		o.normals[tri*9+5] = normal.Z()
+
+		o.normals[tri*9+6] = normal.X()
+		o.normals[tri*9+7] = normal.Y()
+		o.normals[tri*9+8] = normal.Z()
+	}
+
+	o.bufferLoader = helpers.NewBufferLoader()
+	o.vao = helpers.GenBindVertexArray()
+	o.nao = helpers.GenBindBuffer(gl.ARRAY_BUFFER)
+
+	helpers.GenBindBuffer(gl.ARRAY_BUFFER) //VBO
+
+	helpers.BindVertexArray(o.vao)
+	o.bufferLoader.BuildFloatBuffer(o.vao, helpers.NewBufferLayout([]int32{3, 2}, o.verticies))
+	gl.BindBuffer(gl.ARRAY_BUFFER, uint32(o.nao))
+	o.bufferLoader.BuildFloatBuffer(o.nao, helpers.NewBufferLayout([]int32{3}, o.normals))
+
+	return o
 }
