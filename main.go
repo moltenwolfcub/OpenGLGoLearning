@@ -34,6 +34,7 @@ func main() {
 
 	cube := Cube(1)
 	cubeBig := Cube(4)
+	pent := Pentahedron(4)
 
 	cubePositions := []mgl32.Vec3{
 		{0.0, 0.0, 0.0},
@@ -139,7 +140,6 @@ func main() {
 			gl.DrawArrays(gl.TRIANGLES, 0, 36)
 		}
 
-		//begin
 		helpers.BindVertexArray(cubeBig.vao)
 		modelMatBig := mgl32.Ident4()
 
@@ -147,7 +147,13 @@ func main() {
 
 		shaderProgram.SetMatrix4("model", modelMatBig)
 		gl.DrawArrays(gl.TRIANGLES, 0, 36)
-		//end
+
+		helpers.BindVertexArray(pent.vao)
+		modelMatp := mgl32.Ident4()
+
+		modelMatp = mgl32.Translate3D(0, 1, 0).Mul4(modelMatp)
+		shaderProgram.SetMatrix4("model", modelMatp)
+		gl.DrawArrays(gl.TRIANGLES, 0, 18)
 
 		window.GLSwap()
 		shaderProgram.CheckShadersForChanges()
@@ -216,13 +222,85 @@ func Cube(size float32) Object {
 		-size / 2, size / 2, size / 2, 0.0, 0.0,
 	}
 
-	o.normals = make([]float32, 36*3)
-	for tri := 0; tri < 12; tri++ {
-		index := tri * 15
+	vertexCount := 36
+	triangleCount := 12
+	stride := 5
+
+	o.normals = make([]float32, vertexCount*3)
+	for tri := 0; tri < triangleCount; tri++ {
+		index := tri * stride * 3
 		p1 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
-		index += 5
+		index += stride
 		p2 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
-		index += 5
+		index += stride
+		p3 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
+
+		normal := helpers.TriangleNormal(p1, p2, p3)
+		o.normals[tri*9+0] = normal.X()
+		o.normals[tri*9+1] = normal.Y()
+		o.normals[tri*9+2] = normal.Z()
+
+		o.normals[tri*9+3] = normal.X()
+		o.normals[tri*9+4] = normal.Y()
+		o.normals[tri*9+5] = normal.Z()
+
+		o.normals[tri*9+6] = normal.X()
+		o.normals[tri*9+7] = normal.Y()
+		o.normals[tri*9+8] = normal.Z()
+	}
+
+	o.bufferLoader = helpers.NewBufferLoader()
+	o.vao = helpers.GenBindVertexArray()
+	o.nao = helpers.GenBindBuffer(gl.ARRAY_BUFFER)
+
+	helpers.GenBindBuffer(gl.ARRAY_BUFFER) //VBO
+
+	helpers.BindVertexArray(o.vao)
+	o.bufferLoader.BuildFloatBuffer(o.vao, helpers.NewBufferLayout([]int32{3, 2}, o.verticies))
+	gl.BindBuffer(gl.ARRAY_BUFFER, uint32(o.nao))
+	o.bufferLoader.BuildFloatBuffer(o.nao, helpers.NewBufferLayout([]int32{3}, o.normals))
+
+	return o
+}
+
+func Pentahedron(size float32) Object {
+	o := Object{}
+	o.verticies = []float32{
+		size / 2, -size / 2, size / 2, 0.0, 1.0,
+		-size / 2, -size / 2, -size / 2, 1.0, 0.0,
+		size / 2, -size / 2, -size / 2, 0.0, 0.0,
+		size / 2, -size / 2, size / 2, 0.0, 1.0,
+		-size / 2, -size / 2, size / 2, 1.0, 1.0,
+		-size / 2, -size / 2, -size / 2, 1.0, 0.0,
+
+		0.0, size / 2, 0.0, size / 2, 1.0,
+		size / 2, -size / 2, -size / 2, 1.0, 0.0,
+		-size / 2, -size / 2, -size / 2, 0.0, 0.0,
+
+		0.0, size / 2, 0.0, size / 2, 1.0,
+		size / 2, -size / 2, size / 2, 1.0, 0.0,
+		size / 2, -size / 2, -size / 2, 0.0, 0.0,
+
+		0.0, size / 2, 0.0, size / 2, 1.0,
+		-size / 2, -size / 2, size / 2, 1.0, 0.0,
+		size / 2, -size / 2, size / 2, 0.0, 0.0,
+
+		0.0, size / 2, 0.0, size / 2, 1.0,
+		-size / 2, -size / 2, -size / 2, 1.0, 0.0,
+		-size / 2, -size / 2, size / 2, 0.0, 0.0,
+	}
+
+	vertexCount := 18
+	triangleCount := 6
+	stride := 5
+
+	o.normals = make([]float32, vertexCount*3)
+	for tri := 0; tri < triangleCount; tri++ {
+		index := tri * stride * 3
+		p1 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
+		index += stride
+		p2 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
+		index += stride
 		p3 := mgl32.Vec3{o.verticies[index], o.verticies[index+1], o.verticies[index+2]}
 
 		normal := helpers.TriangleNormal(p1, p2, p3)
